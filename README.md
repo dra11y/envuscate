@@ -1,4 +1,4 @@
-[![CI](https://img.shields.io/github/check-runs/orph3usLyre/envuscate-waters/main?style=flat-square&label=CI)](https://github.com/orph3usLyre/envuscate-waters/actions/workflows/rust.yml)
+[![CI](https://img.shields.io/github/check-runs/dra11y/envuscate/main?style=flat-square&label=CI)](https://github.com/dra11y/envuscate/actions/workflows/rust.yml)
 [![Docs.rs](https://img.shields.io/docsrs/envuscate?style=flat-square-orange)](https://docs.rs/envuscate)
 [![Crates.io](https://img.shields.io/crates/v/envuscate?style=flat-square)](https://crates.io/crates/envuscate)
 [![Downloads](https://img.shields.io/crates/d/envuscate?style=flat-square&color=red)](https://crates.io/crates/envuscate)

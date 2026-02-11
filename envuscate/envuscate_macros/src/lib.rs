@@ -9,7 +9,7 @@
 
 //! # `envuscate_macro`
 //!
-//! This crate provides macros that are reexported by the [envuscate](https://github.com/orph3usLyre/envuscate-waters/tree/main/envuscate) crate and should **not** be used
+//! This crate provides macros that are reexported by the [envuscate](https://github.com/dra11y/envuscate/tree/main/envuscate) crate and should **not** be used
 //! outside the context of that crate.
 //!
 
