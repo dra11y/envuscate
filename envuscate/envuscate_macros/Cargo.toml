@@ -20,7 +20,8 @@ quote = "1.0"
 syn = { version = "2.0", features = ["full", "extra-traits"] }
 proc-macro2 = "1.0"
 chacha20poly1305 = "0.10"
-rand = { version = "0.8.5" }
+rand = { version = "0.10" }
+proc-macro-error2 = "2"
 
 [features]
 env = []

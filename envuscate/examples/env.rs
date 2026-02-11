@@ -9,6 +9,7 @@ use envuscate::envuscate;
 // env`
 //
 fn main() {
+    let x = env!("MY_CLEAR_VAR");
     let text = envuscate!(env = "RUNTIME_KEY", "MY_OBFUSCATED_VAR");
-    println!("{text}");
+    println!("{x} - {text}");
 }

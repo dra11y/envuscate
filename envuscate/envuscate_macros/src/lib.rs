@@ -21,14 +21,15 @@ use chacha20poly1305::{
 };
 use proc_macro::TokenStream;
 use rand::{
-    Rng,
-    distributions::{Alphanumeric, DistString},
+    RngExt,
+    distr::{Alphanumeric, SampleString},
+    rng,
 };
 
 // frontend (parsing)
 #[cfg(feature = "env")]
 struct EnvuscateInput {
-    text: syn::LitStr,
+    env_var_name: syn::LitStr,
     env: Option<String>,
 }
 
@@ -52,8 +53,8 @@ impl syn::parse::Parse for EnvuscateInput {
         } else {
             None
         };
-        let text = input.parse::<syn::LitStr>()?;
-        Ok(Self { text, env })
+        let env_var_name = input.parse::<syn::LitStr>()?;
+        Ok(Self { env_var_name, env })
     }
 }
 
@@ -83,16 +84,18 @@ struct InPlaceDecrypter {
 }
 
 fn gen_snake_case(len: usize) -> String {
-    format!(
-        "{}_{}",
-        OsRng.gen_range(b'a'..=b'z') as char,
-        Alphanumeric.sample_string(&mut OsRng, len).to_lowercase()
-    )
+    let first = rng().sample(Alphanumeric) as char;
+    let rest = Alphanumeric.sample_string(&mut rng(), len).to_lowercase();
+
+    format!("{first}_{rest}")
 }
 
 #[cfg(not(feature = "env"))]
 impl InPlaceDecrypter {
-    fn new(text: &str, checked: bool) -> Self {
+    fn new(env_var_name: &str, checked: bool) -> Self {
+        let text = std::env::var(env_var_name).unwrap_or_else(|_| {
+            panic!("environment variable `{env_var_name}` not defined at compile time")
+        });
         let text_len = text.len();
         let key = ChaCha20Poly1305::generate_key(&mut OsRng);
         let encryption = ChaCha20Poly1305::new(&key);
@@ -118,7 +121,10 @@ impl InPlaceDecrypter {
     fn new(envuscate_input: EnvuscateInput, checked: bool) -> Self {
         use std::fmt::Write;
 
-        let text = envuscate_input.text.value();
+        let env_var_name = envuscate_input.env_var_name.value();
+        let text = std::env::var(&env_var_name).unwrap_or_else(|_| {
+            panic!("environment variable `{env_var_name}` not defined at compile time")
+        });
         let text_len = text.len();
         let key = ChaCha20Poly1305::generate_key(&mut OsRng);
         let encryption = ChaCha20Poly1305::new(&key);
