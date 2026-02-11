@@ -5,7 +5,7 @@ members = ["envuscate"]
 [workspace.package]
 version = "0.1.0"
 authors = ["dra11y"]
-description = "A rust env obfuscation library."
+description = "A rust compile-time env var obfuscation library, forked from muddy."
 edition = "2024"
 readme = "./README.md"
 license = "MIT OR Apache-2.0"

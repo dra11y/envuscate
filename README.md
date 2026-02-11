@@ -8,8 +8,9 @@
 
 # envuscate
 
-envuscate is an env string obfuscation library, designed to provide an easy way of avoiding simple static binary analysis tools such as `strings` or YARA rules.
-It functions by encrypting texts at build time, and embedding an in-place decrypter that is evaluated at runtime.
+envuscate is a rust compile-time env var obfuscation library, forked from [`muddy`](https://github.com/orph3usLyre/muddy-waters),
+designed to provide an easy way of avoiding simple static binary analysis tools such as `strings` or YARA rules.
+It functions by encrypting the contents of environment variables at build time, and embedding an in-place decrypter that is evaluated at runtime.
 
 
 ## Usage & Examples
@@ -18,7 +19,7 @@ It functions by encrypting texts at build time, and embedding an in-place decryp
 // examples/simple.rs
 use envuscate::envuscate;
 
-let non_obfuscated = env!("MY_OBFUSCATED_VAR");
+let non_obfuscated = env!("MY_CLEAR_VAR");
 let obfuscated = envuscate!("MY_OBFUSCATED_VAR");
 println!("{non_obfuscated}");
 println!("{obfuscated}");
