@@ -215,7 +215,7 @@ impl quote::ToTokens for InPlaceDecrypter {
             quote::quote! {
                 {
                     {
-                        const _: Option<&str> = option_env!(#env_var_name);
+                        const _: &str = env!(#env_var_name);
                     }
 
                     #cipher_key_nonce
@@ -275,7 +275,7 @@ impl quote::ToTokens for InPlaceDecrypter {
             quote::quote! {
                 {
                     {
-                        const _: Option<&str> = option_env!(#env_var_name);
+                        const _: &str = env!(#env_var_name);
                     }
 
                     #cipher_key_nonce
