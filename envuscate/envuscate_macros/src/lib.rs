@@ -308,8 +308,8 @@ impl quote::ToTokens for InPlaceDecrypter {
     }
 }
 
-/// Obfuscates an environment variable at compile time. The generated code will provide checks against multiple evaluations.
-/// The environment variable name used to get the value will not appear in the binary `strings`.
+/// Obfuscates an environment variable's value at compile time. The generated code will provide checks against multiple evaluations.
+/// Neither the environment variable name nor its value will appear in the binary `strings`.
 ///
 /// # Example
 ///
@@ -350,8 +350,8 @@ pub fn envuscate(input: TokenStream) -> TokenStream {
     encrypt(input, true)
 }
 
-/// Obfuscates an environment variable at compile time. The generated code will _NOT_ provide checks against multiple evaluations.
-/// The environment variable name used to get the value will not appear in the binary `strings`.
+/// Obfuscates an environment variable's value at compile time. The generated code will _NOT_ provide checks against multiple evaluations.
+/// Neither the environment variable name nor its value will appear in the binary `strings`.
 ///
 /// # Example
 ///
