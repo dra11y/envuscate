@@ -20,8 +20,8 @@
 //! // examples/simple.rs
 //! use envuscate::envuscate;
 //!
-//! let non_obfuscated = env!("MY_ENV_VAR");
-//! let obfuscated = envuscate!("MY_ENV_VAR");
+//! let non_obfuscated = env!("MY_CLEAR_VAR");
+//! let obfuscated = envuscate!("MY_OBFUSCATED_VAR");
 //! println!("{non_obfuscated}");
 //! println!("{obfuscated}");
 //! ```
@@ -53,7 +53,7 @@
 //! ```should_panic
 //! use envuscate::envuscate;
 //!
-//! let obfuscated = envuscate!(env, "MY_ENV_VAR");
+//! let obfuscated = envuscate!(env, "MY_OBFUSCATED_VAR");
 //! println!("{obfuscated}");
 //! ```
 //!
@@ -62,7 +62,7 @@
 //!
 //! This env will then need to be set at runtime, otherwise the program will panic: `ENVUSCATE='<SOME_KEY>' cargo r`
 //!
-//! > You may also set your own key identifiers: `envuscate!(env = "MY_KEY_NAME", "MY_ENV_VAR")`
+//! > You may also set your own key identifiers: `envuscate!(env = "MY_KEY_NAME", "MY_OBFUSCATED_VAR")`
 //! >
 //!
 //! ### `envuscate_unchecked!()`
@@ -79,7 +79,7 @@
 //! }
 //!
 //! fn f2() -> &'static str {
-//!   envuscate_unchecked!(env, "MY_ENV_VAR")
+//!   envuscate_unchecked!(env, "MY_OBFUSCATED_VAR")
 //! }
 //!
 //! fn f3() -> &'static str {
@@ -106,7 +106,7 @@
 //! use envuscate::envuscate_unchecked;
 //!
 //! // only evaluated once
-//! let plaintext = envuscate_unchecked!("MY_ENV_VAR");
+//! let plaintext = envuscate_unchecked!("MY_OBFUSCATED_VAR");
 //! for _ in 0..2 {
 //!   println!("{}", plaintext); // <--- fine
 //! }

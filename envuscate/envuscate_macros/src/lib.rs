@@ -283,7 +283,7 @@ impl quote::ToTokens for InPlaceDecrypter {
 ///
 /// ```ignore
 /// fn f() -> &'static str {
-///   envuscate!("MY_ENV_VAR")
+///   envuscate!("MY_OBFUSCATED_VAR")
 /// }
 ///
 /// for _ in 0..2 {
@@ -314,7 +314,7 @@ impl quote::ToTokens for InPlaceDecrypter {
 ///
 #[proc_macro]
 pub fn envuscate(input: TokenStream) -> TokenStream {
-    waters(input, true)
+    encrypt(input, true)
 }
 
 /// Obfuscates a literal text. The generated code will _NOT_ provide checks against multiple evaluations.
@@ -323,7 +323,7 @@ pub fn envuscate(input: TokenStream) -> TokenStream {
 ///
 /// ```ignore
 /// fn f() -> &'static str {
-///   envuscate_unchecked!("MY_ENV_VAR")
+///   envuscate_unchecked!("MY_OBFUSCATED_VAR")
 /// }
 ///
 /// let plaintext = f();
@@ -340,7 +340,7 @@ pub fn envuscate(input: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```ignore
-/// println!("{}", envuscate_unchecked!(env, "MY_ENV_VAR")); // will provide the generated deobfuscation key
+/// println!("{}", envuscate_unchecked!(env, "MY_OBFUSCATED_VAR")); // will provide the generated deobfuscation key
 ///                                                   // at build time using the default 'envuscate' key:
 ///                                                   // `ENVUSCATE='<SOME_KEY>'`
 /// ```
@@ -349,25 +349,25 @@ pub fn envuscate(input: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```ignore
-/// println!("{}", envuscate_unchecked!(env = "RUNTIME_KEY", "MY_ENV_VAR")); // will provide the generated deobfuscation key
+/// println!("{}", envuscate_unchecked!(env = "RUNTIME_KEY", "MY_OBFUSCATED_VAR")); // will provide the generated deobfuscation key
 ///                                                              // at build time
 ///                                                              // `MY_ENV='<SOME_KEY>'`
 /// ```
 ///
 #[proc_macro]
 pub fn envuscate_unchecked(input: TokenStream) -> TokenStream {
-    waters(input, false)
+    encrypt(input, false)
 }
 
 #[cfg(feature = "env")]
-fn waters(input: TokenStream, checked: bool) -> TokenStream {
+fn encrypt(input: TokenStream, checked: bool) -> TokenStream {
     let text = syn::parse_macro_input!(input as EnvuscateInput);
     let in_place_dec = InPlaceDecrypter::new(text, checked);
     quote::quote! { #in_place_dec }.into()
 }
 
 #[cfg(not(feature = "env"))]
-fn waters(input: TokenStream, checked: bool) -> TokenStream {
+fn encrypt(input: TokenStream, checked: bool) -> TokenStream {
     let text = syn::parse_macro_input!(input as syn::LitStr);
     let in_place_dec = InPlaceDecrypter::new(&text.value(), checked);
     quote::quote! { #in_place_dec }.into()

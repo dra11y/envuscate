@@ -18,8 +18,8 @@ It functions by encrypting texts at build time, and embedding an in-place decryp
 // examples/simple.rs
 use envuscate::envuscate;
 
-let non_obfuscated = env!("MY_ENV_VAR");
-let obfuscated = envuscate!("MY_ENV_VAR");
+let non_obfuscated = env!("MY_OBFUSCATED_VAR");
+let obfuscated = envuscate!("MY_OBFUSCATED_VAR");
 println!("{non_obfuscated}");
 println!("{obfuscated}");
 ```
@@ -51,7 +51,7 @@ and must be provided at runtime.
 ```rust
 use envuscate::envuscate;
 
-let obfuscated = envuscate!(env, "MY_ENV_VAR");
+let obfuscated = envuscate!(env, "MY_OBFUSCATED_VAR");
 println!("{obfuscated}");
 ```
 
@@ -60,7 +60,7 @@ Running `cargo b` will print out `ENVUSCATE='<SOME_KEY>'` to stderr.
 
 This env will then need to be set at runtime, otherwise the program will panic: `ENVUSCATE='<SOME_KEY>' cargo r`
 
-> You may also set your own key identifiers: `envuscate!(env = "MY_KEY_NAME", "MY_ENV_VAR")`
+> You may also set your own key identifiers: `envuscate!(env = "MY_KEY_NAME", "MY_OBFUSCATED_VAR")`
 >
 
 ### `envuscate_unchecked!()`
@@ -77,7 +77,7 @@ fn f() -> &'static str {
 }
 
 fn f2() -> &'static str {
-  envuscate_unchecked!(env, "MY_ENV_VAR")
+  envuscate_unchecked!(env, "MY_OBFUSCATED_VAR")
 }
 
 fn f3() -> &'static str {
@@ -104,7 +104,7 @@ Alternatively:
 use envuscate::envuscate_unchecked;
 
 // only evaluated once
-let plaintext = envuscate_unchecked!("MY_ENV_VAR");
+let plaintext = envuscate_unchecked!("MY_OBFUSCATED_VAR");
 for _ in 0..2 {
   println!("{}", plaintext); // <--- fine
 }
@@ -156,7 +156,7 @@ Previous versions of this crate provided obfuscation for static strings. This be
 use once_cell::sync::Lazy;
 use envuscate::envuscate_unchecked;
 
-static MY_STRING: Lazy<&'static str> = Lazy::new(|| envuscate_unchecked!("MY_ENV_VAR"));
+static MY_STRING: Lazy<&'static str> = Lazy::new(|| envuscate_unchecked!("MY_OBFUSCATED_VAR"));
 ```
 
 ### Next steps:

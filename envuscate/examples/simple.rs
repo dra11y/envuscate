@@ -6,8 +6,8 @@ use envuscate::envuscate;
 //
 // only the non-obfuscated text will show up
 fn main() {
-    let non_obfuscated = env!("MY_ENV_VAR");
-    let obfuscated = envuscate!("MY_ENV_VAR");
+    let non_obfuscated = env!("MY_CLEAR_VAR");
+    let obfuscated = envuscate!("MY_OBFUSCATED_VAR");
     println!("{non_obfuscated}");
     println!("{obfuscated}");
 }

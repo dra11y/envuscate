@@ -9,6 +9,6 @@ use envuscate::envuscate;
 // env`
 //
 fn main() {
-    let text = envuscate!(env = "RUNTIME_KEY", "MY_ENV_VAR");
+    let text = envuscate!(env = "RUNTIME_KEY", "MY_OBFUSCATED_VAR");
     println!("{text}");
 }
