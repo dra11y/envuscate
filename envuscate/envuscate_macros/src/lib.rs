@@ -16,13 +16,13 @@
 // TODO: look at https://github.com/dtolnay/proc-macro-workshop
 // for crate organization
 use chacha20poly1305::{
-    aead::{Aead, KeyInit, OsRng},
     AeadCore, ChaCha20Poly1305,
+    aead::{Aead, KeyInit, OsRng},
 };
 use proc_macro::TokenStream;
 use rand::{
-    distributions::{Alphanumeric, DistString},
     Rng,
+    distributions::{Alphanumeric, DistString},
 };
 
 // frontend (parsing)
@@ -164,7 +164,7 @@ impl quote::ToTokens for InPlaceDecrypter {
         let encrypted = &self.obfuscated_text.ident;
         let array_ident = &self.array_ident;
         let len = self.text_len + 16; // overhead for auth tag, not currently used here
-                                      // https://docs.rs/chacha20poly1305/latest/chacha20poly1305/
+        // https://docs.rs/chacha20poly1305/latest/chacha20poly1305/
         let cipher_key_nonce = self.env.as_ref().map_or_else(|| quote::quote! {
                  let #key: [u8; 32] = *#key_literal;
                  let #nonce: [u8; 12] = *#nonce_literal;
@@ -283,7 +283,7 @@ impl quote::ToTokens for InPlaceDecrypter {
 ///
 /// ```ignore
 /// fn f() -> &'static str {
-///   envuscate!("supersecret1")
+///   envuscate!("MY_ENV_VAR")
 /// }
 ///
 /// for _ in 0..2 {
@@ -323,7 +323,7 @@ pub fn envuscate(input: TokenStream) -> TokenStream {
 ///
 /// ```ignore
 /// fn f() -> &'static str {
-///   envuscate_unchecked!("supersecret1")
+///   envuscate_unchecked!("MY_ENV_VAR")
 /// }
 ///
 /// let plaintext = f();
@@ -340,7 +340,7 @@ pub fn envuscate(input: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```ignore
-/// println!("{}", envuscate_unchecked!(env, "my text")); // will provide the generated deobfuscation key
+/// println!("{}", envuscate_unchecked!(env, "MY_ENV_VAR")); // will provide the generated deobfuscation key
 ///                                                   // at build time using the default 'envuscate' key:
 ///                                                   // `ENVUSCATE='<SOME_KEY>'`
 /// ```
@@ -349,7 +349,7 @@ pub fn envuscate(input: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```ignore
-/// println!("{}", envuscate_unchecked!(env = "MY_ENV", "my text")); // will provide the generated deobfuscation key
+/// println!("{}", envuscate_unchecked!(env = "RUNTIME_KEY", "MY_ENV_VAR")); // will provide the generated deobfuscation key
 ///                                                              // at build time
 ///                                                              // `MY_ENV='<SOME_KEY>'`
 /// ```

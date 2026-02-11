@@ -8,7 +8,7 @@
 
 # envuscate
 
-envuscate is a literal string obfuscation library, designed to provide an easy way of avoiding simple static binary analysis tools such as `strings` or YARA rules.
+envuscate is an env string obfuscation library, designed to provide an easy way of avoiding simple static binary analysis tools such as `strings` or YARA rules.
 It functions by encrypting texts at build time, and embedding an in-place decrypter that is evaluated at runtime.
 
 
@@ -18,10 +18,10 @@ It functions by encrypting texts at build time, and embedding an in-place decryp
 // examples/simple.rs
 use envuscate::envuscate;
 
-let non_obfuscated = "notsupersecret9001";
-let obfuscated = envuscate!("supersecret42");
-println!("{}", non_obfuscated);
-println!("{}", obfuscated);
+let non_obfuscated = env!("MY_ENV_VAR");
+let obfuscated = envuscate!("MY_ENV_VAR");
+println!("{non_obfuscated}");
+println!("{obfuscated}");
 ```
 
 
@@ -35,11 +35,11 @@ println!("{}", obfuscated);
 
 
 `envuscate` primarily provides the exported `envuscate!()` and `envuscate_unchecked!()`, macros, which
-each take a literal text as input, encrypt it at buildtime, and generate
+each take an environment variable name as input, expect and encrypt its value at buildtime, and generate
 an in-place decrypter which is evaluated to the plaintext `&'static str` at runtime.
 
 
-By default, these macros will encrypt literal strings with the [`chacha20poly1305`] implementation
+By default, these macros will encrypt env strings with the [`chacha20poly1305`] implementation
 and embed the key inside the binary.
 
 #### Runtime-provided decryption
@@ -51,8 +51,8 @@ and must be provided at runtime.
 ```rust
 use envuscate::envuscate;
 
-let obfuscated = envuscate!(env, "supersecret42");
-println!("{}", obfuscated);
+let obfuscated = envuscate!(env, "MY_ENV_VAR");
+println!("{obfuscated}");
 ```
 
 
@@ -60,7 +60,7 @@ Running `cargo b` will print out `ENVUSCATE='<SOME_KEY>'` to stderr.
 
 This env will then need to be set at runtime, otherwise the program will panic: `ENVUSCATE='<SOME_KEY>' cargo r`
 
-> You may also set your own key identifiers: `envuscate!(env = "MY_KEY_NAME", "supersecret42")`
+> You may also set your own key identifiers: `envuscate!(env = "MY_KEY_NAME", "MY_ENV_VAR")`
 >
 
 ### `envuscate_unchecked!()`
@@ -77,11 +77,11 @@ fn f() -> &'static str {
 }
 
 fn f2() -> &'static str {
-  envuscate_unchecked!(env, "supersecret42")
+  envuscate_unchecked!(env, "MY_ENV_VAR")
 }
 
 fn f3() -> &'static str {
-  envuscate_unchecked!(env, "supersecret9001")
+  envuscate_unchecked!(env, "ANOTHER_ENV_VAR")
 }
 
 for _ in 0..2 {
@@ -104,7 +104,7 @@ Alternatively:
 use envuscate::envuscate_unchecked;
 
 // only evaluated once
-let plaintext = envuscate_unchecked!("supersecret1337");
+let plaintext = envuscate_unchecked!("MY_ENV_VAR");
 for _ in 0..2 {
   println!("{}", plaintext); // <--- fine
 }
@@ -156,7 +156,7 @@ Previous versions of this crate provided obfuscation for static strings. This be
 use once_cell::sync::Lazy;
 use envuscate::envuscate_unchecked;
 
-static MY_STRING: Lazy<&'static str> = Lazy::new(|| envuscate_unchecked!("some text"));
+static MY_STRING: Lazy<&'static str> = Lazy::new(|| envuscate_unchecked!("MY_ENV_VAR"));
 ```
 
 ### Next steps:
