@@ -196,13 +196,13 @@ impl quote::ToTokens for InPlaceDecrypter {
                  let #nonce: [u8; 12] = *#nonce_literal;
                  let Some(var) = std::env::var_os(#env) else {
                      #[cfg(debug_assertions)]
-                     panic!("Need to set {} env variable", #env);
+                     panic!("Need to set `{}` env variable", #env);
                      #[cfg(not(debug_assertions))]
                      panic!();
                  };
                  let Ok(bytes) = <[u8; 32] as ::envuscate::const_hex::FromHex>::from_hex(var.as_encoded_bytes()) else {
                      #[cfg(debug_assertions)]
-                     panic!("Can't get bytes from {} env variable, secret key needs to be a hex string with 64 symbols length.", #env);
+                     panic!("Can't get bytes from `{}` env variable, secret key needs to be a hex string with 64 symbols length.", #env);
                      #[cfg(not(debug_assertions))]
                      panic!();
                  };
