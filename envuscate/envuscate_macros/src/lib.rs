@@ -20,11 +20,13 @@ use chacha20poly1305::{
     aead::{Aead, KeyInit, OsRng},
 };
 use proc_macro::TokenStream;
+use proc_macro_error2::proc_macro_error;
 use rand::{
-    RngExt,
-    distr::{Alphanumeric, SampleString},
+    distr::{Alphabetic, Alphanumeric, Distribution, SampleString},
     rng,
 };
+#[cfg(not(feature = "env"))]
+use syn::LitStr;
 
 // frontend (parsing)
 #[cfg(feature = "env")]
@@ -75,6 +77,7 @@ impl<T> Assignment<T> {
 
 struct InPlaceDecrypter {
     text_len: usize,
+    env_var_name: String,
     obfuscated_text: Assignment<Vec<u8>>,
     key: Assignment<chacha20poly1305::Key>,
     nonce: Assignment<chacha20poly1305::Nonce>,
@@ -84,17 +87,24 @@ struct InPlaceDecrypter {
 }
 
 fn gen_snake_case(len: usize) -> String {
-    let first = rng().sample(Alphanumeric) as char;
-    let rest = Alphanumeric.sample_string(&mut rng(), len).to_lowercase();
+    let mut rng = rng();
+
+    let first = Alphabetic.sample(&mut rng) as char;
+    let rest = Alphanumeric.sample_string(&mut rng, len).to_lowercase();
 
     format!("{first}_{rest}")
 }
 
 #[cfg(not(feature = "env"))]
 impl InPlaceDecrypter {
-    fn new(env_var_name: &str, checked: bool) -> Self {
-        let text = std::env::var(env_var_name).unwrap_or_else(|_| {
-            panic!("environment variable `{env_var_name}` not defined at compile time")
+    fn new(env_var_name: LitStr, checked: bool) -> Self {
+        use proc_macro_error2::abort;
+
+        let text = std::env::var(env_var_name.value()).unwrap_or_else(|_| {
+            abort!(
+                env_var_name.span(),
+                "environment variable `{env_var_name}` not defined at compile time"
+            )
         });
         let text_len = text.len();
         let key = ChaCha20Poly1305::generate_key(&mut OsRng);
@@ -103,6 +113,7 @@ impl InPlaceDecrypter {
         let text = encryption.encrypt(&nonce, text.as_bytes()).unwrap();
         Self {
             text_len,
+            env_var_name,
             obfuscated_text: Assignment::new(text),
             key: Assignment::new(key),
             nonce: Assignment::new(nonce),
@@ -119,11 +130,15 @@ impl InPlaceDecrypter {
 #[cfg(feature = "env")]
 impl InPlaceDecrypter {
     fn new(envuscate_input: EnvuscateInput, checked: bool) -> Self {
+        use proc_macro_error2::abort;
         use std::fmt::Write;
 
         let env_var_name = envuscate_input.env_var_name.value();
         let text = std::env::var(&env_var_name).unwrap_or_else(|_| {
-            panic!("environment variable `{env_var_name}` not defined at compile time")
+            abort!(
+                envuscate_input.env_var_name.span(),
+                "environment variable `{env_var_name}` not defined at compile time"
+            )
         });
         let text_len = text.len();
         let key = ChaCha20Poly1305::generate_key(&mut OsRng);
@@ -144,6 +159,7 @@ impl InPlaceDecrypter {
         let text = encryption.encrypt(&nonce, text.as_bytes()).unwrap();
         Self {
             text_len,
+            env_var_name,
             obfuscated_text: Assignment::new(text),
             key: Assignment::new(key),
             nonce: Assignment::new(nonce),
@@ -162,6 +178,7 @@ impl InPlaceDecrypter {
 // TODO: use https://doc.rust-lang.org/core/cell/struct.SyncUnsafeCell.html when stable
 impl quote::ToTokens for InPlaceDecrypter {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let env_var_name = &self.env_var_name;
         let key_literal = proc_macro2::Literal::byte_string(&self.key.t);
         let nonce_literal = proc_macro2::Literal::byte_string(&self.nonce.t);
         let encrypted_literal = proc_macro2::Literal::byte_string(&self.obfuscated_text.t);
@@ -197,6 +214,10 @@ impl quote::ToTokens for InPlaceDecrypter {
         let out = if self.checked {
             quote::quote! {
                 {
+                    {
+                        const _: Option<&str> = option_env!(#env_var_name);
+                    }
+
                     #cipher_key_nonce
                     struct Untouchable<T> {
                         cell: ::core::cell::UnsafeCell<T>,
@@ -253,6 +274,10 @@ impl quote::ToTokens for InPlaceDecrypter {
         } else {
             quote::quote! {
                 {
+                    {
+                        const _: Option<&str> = option_env!(#env_var_name);
+                    }
+
                     #cipher_key_nonce
                     struct Untouchable<T>(::core::cell::UnsafeCell<T>);
                     /// # Safety
@@ -283,7 +308,8 @@ impl quote::ToTokens for InPlaceDecrypter {
     }
 }
 
-/// Obfuscates a literal text. The generated code will provide checks against multiple evaluations.
+/// Obfuscates an environment variable at compile time. The generated code will provide checks against multiple evaluations.
+/// The environment variable name used to get the value will not appear in the binary `strings`.
 ///
 /// # Example
 ///
@@ -313,17 +339,19 @@ impl quote::ToTokens for InPlaceDecrypter {
 /// # Example
 ///
 /// ```ignore
-/// println!("{}", envuscate!(env = "MY_ENV", "my text")); // will provide the generated deobfuscation key
-///                                                    // at build time
-///                                                    // `MY_ENV='<SOME_KEY>'`
+/// println!("{}", envuscate!(env = "RUNTIME_KEY", "MY_ENV_VAR")); // will provide the generated deobfuscation key
+///                                  // at build time
+///                                  // `RUNTIME_KEY='<SOME_KEY>'`
 /// ```
 ///
 #[proc_macro]
+#[proc_macro_error]
 pub fn envuscate(input: TokenStream) -> TokenStream {
     encrypt(input, true)
 }
 
-/// Obfuscates a literal text. The generated code will _NOT_ provide checks against multiple evaluations.
+/// Obfuscates an environment variable at compile time. The generated code will _NOT_ provide checks against multiple evaluations.
+/// The environment variable name used to get the value will not appear in the binary `strings`.
 ///
 /// # Example
 ///
@@ -347,8 +375,8 @@ pub fn envuscate(input: TokenStream) -> TokenStream {
 ///
 /// ```ignore
 /// println!("{}", envuscate_unchecked!(env, "MY_OBFUSCATED_VAR")); // will provide the generated deobfuscation key
-///                                                   // at build time using the default 'envuscate' key:
-///                                                   // `ENVUSCATE='<SOME_KEY>'`
+///                                           // at build time using the default 'envuscate' key:
+///                                           // `ENVUSCATE='<SOME_KEY>'`
 /// ```
 ///
 /// An alternative env key may be set by the caller:
@@ -356,25 +384,26 @@ pub fn envuscate(input: TokenStream) -> TokenStream {
 ///
 /// ```ignore
 /// println!("{}", envuscate_unchecked!(env = "RUNTIME_KEY", "MY_OBFUSCATED_VAR")); // will provide the generated deobfuscation key
-///                                                              // at build time
-///                                                              // `MY_ENV='<SOME_KEY>'`
+///                                               // at build time
+///                                               // `RUNTIME_KEY='<SOME_KEY>'`
 /// ```
 ///
 #[proc_macro]
+#[proc_macro_error]
 pub fn envuscate_unchecked(input: TokenStream) -> TokenStream {
     encrypt(input, false)
 }
 
 #[cfg(feature = "env")]
 fn encrypt(input: TokenStream, checked: bool) -> TokenStream {
-    let text = syn::parse_macro_input!(input as EnvuscateInput);
-    let in_place_dec = InPlaceDecrypter::new(text, checked);
+    let envuscate_input = syn::parse_macro_input!(input as EnvuscateInput);
+    let in_place_dec = InPlaceDecrypter::new(envuscate_input, checked);
     quote::quote! { #in_place_dec }.into()
 }
 
 #[cfg(not(feature = "env"))]
 fn encrypt(input: TokenStream, checked: bool) -> TokenStream {
-    let text = syn::parse_macro_input!(input as syn::LitStr);
-    let in_place_dec = InPlaceDecrypter::new(&text.value(), checked);
+    let env_var_name = syn::parse_macro_input!(input as syn::LitStr);
+    let in_place_dec = InPlaceDecrypter::new(env_var_name.clone(), checked);
     quote::quote! { #in_place_dec }.into()
 }
