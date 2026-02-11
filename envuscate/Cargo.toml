@@ -11,7 +11,7 @@ categories.workspace = true
 repository.workspace = true
 
 [dependencies]
-envuscate_macros = { path = "envuscate_macros", default-features = false }
+envuscate_macros = { version = "0.1.0", path = "envuscate_macros", default-features = false }
 chacha20poly1305 = { version = "0.10", default-features = false }
 aead = { version = "0.5.2", default-features = false, features = ["arrayvec"] }
 arrayvec = { version = "0.7.6", default-features = false }
