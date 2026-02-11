@@ -1,0 +1,14 @@
+[workspace]
+resolver = "3"
+members = ["envuscate"]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["dra11y"]
+description = "A rust env obfuscation library."
+edition = "2024"
+readme = "./README.md"
+license = "MIT OR Apache-2.0"
+keywords = ["obfuscation", "obfuscate", "hide", "strings", "env", "environment"]
+categories = ["encoding", "development-tools", "cryptography"]
+repository = "https://github.com/dra11y/envuscate"
